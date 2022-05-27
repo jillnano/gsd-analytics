@@ -36,6 +36,10 @@ def make_frame(frame_num, frame_list, rate, shape, video_frame, watermark, detai
 		bg_frame = bg_frame.astype('uint8')
 	# bg_frame = cv2.cvtColor(bg_frame, cv2.COLOR_BGRA2BGR)
 
+	if watermark is not None:
+		# frame = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
+		bg_frame = cv2.addWeighted(bg_frame, alpha=1, src2=watermark, beta=0.3, gamma=1)
+
 	if detail:
 		f_s = '%.4f'%np.std(score_line)
 		f_m = np.mean(score_line)
@@ -43,12 +47,9 @@ def make_frame(frame_num, frame_list, rate, shape, video_frame, watermark, detai
 		detail_list.append((area_pos[0] + int(frame_num * area_step), area_pos[1] - int(f_m * area_scale)))
 		bg_info = cv2.merge((b_c, g_c, r_c, a_c))
 		for d in detail_list:
-			cv2.circle(bg_info, d, 4, (255, 0, 0), cv2.FILLED)
-	if watermark is not None:
-		# frame = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
-		bg_frame = cv2.addWeighted(bg_frame, alpha=1, src2=watermark, beta=0.3, gamma=1)
+			cv2.circle(bg_info, d, 4, (0, 255, 0), cv2.FILLED)
 		bg_frame = cv2.addWeighted(bg_frame, alpha=1, src2=bg_info, beta=0.5, gamma=1)
-		bg_frame = cv2.cvtColor(bg_frame, cv2.COLOR_BGRA2BGR)
+	bg_frame = cv2.cvtColor(bg_frame, cv2.COLOR_BGRA2BGR)
 
 	video_frame.append((frame_num, bg_frame))
 	return frame_num, bg_frame
@@ -235,7 +236,7 @@ def main(filename, line, sync, move, detail):
 				if fpl:
 					zl = zip(fpl[0:-1], fpl[1::])
 					for pt1, pt2 in zl:
-						cv2.line(frame, pt1, pt2, (0, 255, 0), 5)
+						cv2.line(frame, pt1, pt2, (255, 0, 0), 5)
 					for pt in fpl:
 						cv2.circle(frame, pt, 8, (0, 0, 255), cv2.FILLED)
 			if move:
