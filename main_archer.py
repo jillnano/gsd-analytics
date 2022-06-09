@@ -99,6 +99,12 @@ def dtwFrameList(template, query):
 	alignment = dtw(template, query, step_pattern='asymmetric', keep_internals=True)
 	return alignment.index1, alignment.index2
 
+def equalizeHist2RGB(img):
+	img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+	img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
+	img_rgb = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2RGB)
+	return img_rgb
+
 def main(filename, line, sync, move, detail):
 	st = time.time()
 	cameraCapture = cv2.VideoCapture(filename)
@@ -121,13 +127,11 @@ def main(filename, line, sync, move, detail):
 	else:
 		watermark = None
 
-	start_img = cv2.cvtColor(cv2.imread(template_start_fn), cv2.COLOR_BGR2RGB)
-	start_val = pose.process(start_img)
+	start_val = pose.process(equalizeHist2RGB(cv2.imread(template_start_fn)))
 	base_pos_list, start_val = getValueNp(start_val, width, height)
-	end_img = cv2.cvtColor(cv2.imread(template_end_fn), cv2.COLOR_BGR2RGB)
-	end_val = pose.process(end_img)
-	_, end_val = getValueNp(end_val, width, height)
 	print(start_val)
+	end_val = pose.process(equalizeHist2RGB(cv2.imread(template_end_fn)))
+	_, end_val = getValueNp(end_val, width, height)
 	print(end_val)
 
 	success = True
@@ -140,8 +144,7 @@ def main(filename, line, sync, move, detail):
 		success, frame = cameraCapture.read()
 		if frame is None:
 			continue
-		frameRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-		pose_val = pose.process(frameRGB)
+		pose_val = pose.process(equalizeHist2RGB(frame))
 		if not pose_val.pose_landmarks:
 			frame_move_dict[frame_num] = frame_move_dict.get(frame_num - 1, (0, 0))
 			continue
